@@ -6,11 +6,13 @@
   "scripts": {
     "build": "remix build",
     "dev": "remix dev --manual",
+    "seed": "npx ts-node --require tsconfig-paths/register prisma/seed.ts",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@prisma/client": "^5.10.2",
     "@remix-run/css-bundle": "^2.8.1",
     "@remix-run/node": "^2.8.1",
     "@remix-run/react": "^2.8.1",
@@ -31,7 +33,10 @@
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "typescript": "^5.1.6"
+    "prisma": "^5.10.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.2"
   },
   "engines": {
     "node": ">=18.0.0"

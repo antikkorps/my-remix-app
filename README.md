@@ -36,3 +36,11 @@ Make sure to deploy the output of `remix build`
 
 - `build/`
 - `public/build/`
+
+## DB
+
+To use DB, once installed run
+
+```sh
+npx prisma db push
+```
