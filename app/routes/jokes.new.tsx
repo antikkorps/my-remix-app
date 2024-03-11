@@ -1,20 +1,33 @@
-import type { ActionFunctionArgs } from "@remix-run/node"
-import { redirect } from "@remix-run/node"
-import { useActionData } from "@remix-run/react"
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node"
+import { json, redirect } from "@remix-run/node"
+import {
+  isRouteErrorResponse,
+  Link,
+  useActionData,
+  useRouteError,
+} from "@remix-run/react"
 
 import { db } from "~/utils/db.server"
 import { badRequest } from "~/utils/request.server"
-import { requireUserId } from "~/utils/sessions.server"
+import { getUserId, requireUserId } from "~/utils/sessions.server"
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const userId = await getUserId(request)
+  if (!userId) {
+    throw new Response("Unauthorized", { status: 401 })
+  }
+  return json({})
+}
 
 function validateJokeContent(content: string) {
   if (content.length < 10) {
-    return "Your joke is too short. It should be at least 10 characters."
+    return "That joke is too short"
   }
 }
 
 function validateJokeName(name: string) {
   if (name.length < 3) {
-    return "Your name is too short. It should be at least 3 characters."
+    return "That joke's name is too short"
   }
 }
 
@@ -23,13 +36,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const form = await request.formData()
   const content = form.get("content")
   const name = form.get("name")
-  // we do this type check to be extra sure and to make TypeScript happy
-  // we'll explore validation next!
   if (typeof content !== "string" || typeof name !== "string") {
     return badRequest({
       fieldErrors: null,
       fields: null,
-      formErrors: "Form not submitted correctly. Please try again.",
+      formError: "Form not submitted correctly.",
     })
   }
 
@@ -38,17 +49,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     name: validateJokeName(name),
   }
   const fields = { content, name }
-
   if (Object.values(fieldErrors).some(Boolean)) {
-    return badRequest({ fieldErrors, fields, formError: null })
+    return badRequest({
+      fieldErrors,
+      fields,
+      formError: null,
+    })
   }
 
-  const joke = await db.joke.create({ data: { ...fields, jokesterId: userId } })
+  const joke = await db.joke.create({
+    data: { ...fields, jokesterId: userId },
+  })
   return redirect(`/jokes/${joke.id}`)
 }
 
 export default function NewJokeRoute() {
   const actionData = useActionData<typeof action>()
+
   return (
     <div>
       <p>Add your own hilarious joke</p>
@@ -58,8 +75,8 @@ export default function NewJokeRoute() {
             Name:{" "}
             <input
               defaultValue={actionData?.fields?.name}
-              type="text"
               name="name"
+              type="text"
               aria-invalid={Boolean(actionData?.fieldErrors?.name)}
               aria-errormessage={actionData?.fieldErrors?.name ? "name-error" : undefined}
             />
@@ -99,6 +116,25 @@ export default function NewJokeRoute() {
           </button>
         </div>
       </form>
+    </div>
+  )
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError()
+
+  if (isRouteErrorResponse(error) && error.status === 401) {
+    return (
+      <div className="error-container">
+        <p>You must be logged in to create a joke.</p>
+        <Link to="/login">Login</Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="error-container">
+      Something unexpected went wrong. Sorry about that.
     </div>
   )
 }
