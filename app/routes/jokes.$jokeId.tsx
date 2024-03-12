@@ -6,12 +6,12 @@ import type {
 import { json, redirect } from "@remix-run/node"
 import {
   isRouteErrorResponse,
-  Link,
   useLoaderData,
   useParams,
   useRouteError,
 } from "@remix-run/react"
 
+import { JokeDisplay } from "~/components/joke"
 import { db } from "~/utils/db.server"
 import { getUserId, requireUserId } from "~/utils/sessions.server"
 
@@ -72,25 +72,13 @@ export const action = async ({ params, request }: ActionFunctionArgs) => {
 export default function JokeRoute() {
   const data = useLoaderData<typeof loader>()
 
-  return (
-    <div>
-      <p>Here&apos;s your hilarious joke:</p>
-      <p>{data.joke.content}</p>
-      <Link to=".">&quot;{data.joke.name}&quot; Permalink</Link>
-      {data.isOwner ? (
-        <form method="post">
-          <button className="button" name="intent" type="submit" value="delete">
-            Delete
-          </button>
-        </form>
-      ) : null}
-    </div>
-  )
+  return <JokeDisplay isOwner={data.isOwner} joke={data.joke} />
 }
 
 export function ErrorBoundary() {
   const { jokeId } = useParams()
   const error = useRouteError()
+  console.error(error)
 
   if (isRouteErrorResponse(error)) {
     if (error.status === 400) {
