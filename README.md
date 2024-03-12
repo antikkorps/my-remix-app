@@ -44,3 +44,17 @@ To use DB, once installed run
 ```sh
 npx prisma db push
 ```
+
+## Seed
+
+you can seed data with the following command
+
+```sh
+    npm run seed
+```
+
+## User
+
+once done to log:
+Kody
+twixrox
